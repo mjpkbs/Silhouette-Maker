@@ -1,5 +1,5 @@
 // api/remove-background.js
-// Vercel Serverless Function
+// Vercel Serverless Function - 851-labs/background-remover
 
 module.exports = async (req, res) => {
   // CORS headers
@@ -16,12 +16,11 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { imageUrl } = req.body;
-  const REPLICATE_API_KEY = process.env.REPLICATE_API_KEY;
+  const { imageUrl, apiKey } = req.body;
 
-  if (!REPLICATE_API_KEY) {
-    return res.status(500).json({ 
-      error: 'API 키가 설정되지 않았습니다.' 
+  if (!apiKey) {
+    return res.status(400).json({ 
+      error: 'API 키가 필요합니다.' 
     });
   }
 
@@ -30,17 +29,17 @@ module.exports = async (req, res) => {
   }
 
   try {
-    console.log('🖼️  배경 제거 시작:', imageUrl);
+    console.log('🖼️  배경 제거 시작');
 
-    // Replicate RMBG-1.4 모델 사용
+    // Use 851-labs/background-remover
     const createResponse = await fetch('https://api.replicate.com/v1/predictions', {
       method: 'POST',
       headers: {
-        'Authorization': `Token ${REPLICATE_API_KEY}`,
+        'Authorization': `Token ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        version: "95fcc2a26d3899cd6c2691c900465aaeff466285a65c14638cc5f36f34befaf1",
+        version: "a029dff38972b5fda4ec5d75d7d1cd25aeff621d2cf4946a41055d7db66b80bc",
         input: {
           image: imageUrl
         }
@@ -49,14 +48,14 @@ module.exports = async (req, res) => {
 
     if (!createResponse.ok) {
       const errorText = await createResponse.text();
-      console.error('❌ RMBG API 오류:', errorText);
-      throw new Error(`배경 제거 API 오류: ${createResponse.status}`);
+      console.error('❌ 배경 제거 API 오류:', errorText);
+      throw new Error('배경 제거 API 오류');
     }
 
     let prediction = await createResponse.json();
     console.log('📝 배경 제거 Prediction 생성:', prediction.id);
 
-    // Prediction 완료 대기
+    // Wait for completion
     let attempts = 0;
     const maxAttempts = 30;
     
@@ -67,7 +66,7 @@ module.exports = async (req, res) => {
         `https://api.replicate.com/v1/predictions/${prediction.id}`,
         {
           headers: {
-            'Authorization': `Token ${REPLICATE_API_KEY}`,
+            'Authorization': `Token ${apiKey}`,
           },
         }
       );
@@ -97,14 +96,14 @@ module.exports = async (req, res) => {
     const transparentImageUrl = prediction.output;
     
     if (!transparentImageUrl) {
-      console.error('❌ 투명 이미지 URL 없음:', prediction);
+      console.error('❌ 투명 이미지 URL 없음');
       return res.status(200).json({ 
         transparentImageUrl: imageUrl,
         warning: '배경 제거 결과를 찾을 수 없어 원본 이미지를 반환합니다.'
       });
     }
 
-    console.log('✅ 배경 제거 완료:', transparentImageUrl);
+    console.log('✅ 배경 제거 완료');
 
     return res.status(200).json({ 
       transparentImageUrl,

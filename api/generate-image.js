@@ -1,5 +1,5 @@
 // api/generate-image.js
-// Vercel Serverless Function
+// Vercel Serverless Function - accepts API key from client
 
 module.exports = async (req, res) => {
   // CORS headers
@@ -16,23 +16,22 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { prompt, withBackground } = req.body;
-  const REPLICATE_API_KEY = process.env.REPLICATE_API_KEY;
+  const { prompt, withBackground, apiKey } = req.body;
 
-  if (!REPLICATE_API_KEY) {
-    return res.status(500).json({ 
-      error: 'API 키가 설정되지 않았습니다. Vercel 환경 변수를 확인해주세요.' 
+  if (!apiKey) {
+    return res.status(400).json({ 
+      error: 'API 키가 필요합니다.' 
     });
   }
 
   try {
-    console.log('🎨 이미지 생성 시작:', { prompt: prompt.substring(0, 100), withBackground });
+    console.log('🎨 이미지 생성 시작');
 
-    // 1. Replicate prediction 생성 (Flux Schnell 모델)
+    // Create prediction
     const createResponse = await fetch('https://api.replicate.com/v1/predictions', {
       method: 'POST',
       headers: {
-        'Authorization': `Token ${REPLICATE_API_KEY}`,
+        'Authorization': `Token ${apiKey}`,
         'Content-Type': 'application/json',
         'Prefer': 'wait'
       },
@@ -54,13 +53,13 @@ module.exports = async (req, res) => {
     if (!createResponse.ok) {
       const errorText = await createResponse.text();
       console.error('❌ Replicate API 오류:', errorText);
-      throw new Error(`Replicate API 오류: ${createResponse.status}`);
+      throw new Error('API 키가 올바르지 않거나 Replicate API 오류가 발생했습니다.');
     }
 
     let prediction = await createResponse.json();
     console.log('📝 Prediction 생성됨:', prediction.id);
 
-    // 2. Prediction 완료 대기
+    // Wait for completion
     let attempts = 0;
     const maxAttempts = 60;
     
@@ -71,7 +70,7 @@ module.exports = async (req, res) => {
         `https://api.replicate.com/v1/predictions/${prediction.id}`,
         {
           headers: {
-            'Authorization': `Token ${REPLICATE_API_KEY}`,
+            'Authorization': `Token ${apiKey}`,
           },
         }
       );
@@ -88,18 +87,18 @@ module.exports = async (req, res) => {
     }
     
     if (prediction.status !== 'succeeded') {
-      console.error('⏰ 타임아웃:', { attempts, status: prediction.status });
+      console.error('⏰ 타임아웃');
       throw new Error('이미지 생성 시간이 초과되었습니다. 다시 시도해주세요.');
     }
 
     const imageUrl = prediction.output?.[0];
     
     if (!imageUrl) {
-      console.error('❌ 이미지 URL 없음:', prediction);
+      console.error('❌ 이미지 URL 없음');
       throw new Error('생성된 이미지를 찾을 수 없습니다.');
     }
 
-    console.log('✅ 이미지 생성 완료:', imageUrl);
+    console.log('✅ 이미지 생성 완료');
 
     return res.status(200).json({ 
       imageUrl,

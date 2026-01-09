@@ -11,6 +11,14 @@
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind CDN warning
+        tailwind.config = {
+            corePlugins: {
+                preflight: false,
+            }
+        }
+    </script>
     
     <style>
         * {
@@ -89,6 +97,7 @@
                             <a href="https://replicate.com/account/api-tokens" target="_blank" class="underline hover:text-white">
                                 Get your API key →
                             </a>
+                            <span class="ml-2">💾 Auto-saved locally</span>
                         </p>
                     </div>
                 </div>
