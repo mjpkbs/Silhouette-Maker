@@ -230,27 +230,44 @@ function buildPrompt(withBackground) {
     const ethnicity = translations.ethnicity[appState.ethnicity] || appState.ethnicity;
     const clothing = translations.clothing[appState.clothing] || appState.clothing;
     
-    let prompt = 'Professional high-quality studio photograph, ';
-    prompt += 'STRICTLY REAR VIEW ONLY, person facing directly away from camera, ';
-    prompt += 'back of head centered, completely straight posture, spine aligned, ';
-    prompt += 'standing perfectly upright, shoulders level, head facing straight forward, ';
-    prompt += 'NO turning, NO side angle, NO profile view, ONLY direct back view, ';
-    prompt += `${age} ${ethnicity} ${gender} person, `;
-    prompt += `wearing ${clothing}, `;
-    prompt += 'full body shot from directly behind, perfectly centered composition, ';
-    prompt += 'symmetrical pose, arms naturally at sides or slightly relaxed, ';
+    let prompt = 'Professional studio portrait photograph, ';
     
+    // CRITICAL: Enforce exact back view with multiple strong directives
+    prompt += 'BACK VIEW ONLY, shot from directly behind the subject, ';
+    prompt += 'camera positioned exactly at the back of the person, ';
+    prompt += 'back of head perfectly centered in frame, ';
+    prompt += 'person standing with their back to the camera, facing away, ';
+    prompt += 'ZERO degrees rotation, completely straight back view, ';
+    prompt += 'rear view photograph, viewed from behind, ';
+    
+    // Subject details
+    prompt += `${age} ${ethnicity} ${gender}, `;
+    prompt += `wearing ${clothing}, `;
+    prompt += 'standing upright with perfect posture, ';
+    prompt += 'shoulders level, arms relaxed at sides, ';
+    prompt += 'full body visible from behind, ';
+    
+    // Lighting and background - matching Image 2 style
     if (withBackground) {
-        prompt += 'dramatic dark gradient background, professional studio lighting, ';
-        prompt += 'subtle rim lighting on shoulders, cinematic atmosphere, ';
+        prompt += 'dramatic studio lighting on pure black background, ';
+        prompt += 'soft warm rim light highlighting shoulders and neck edges, ';
+        prompt += 'golden backlight creating subtle glow on hair and upper body, ';
+        prompt += 'deep black void background, cinematic low key lighting, ';
+        prompt += 'professional commercial photography, ';
     } else {
-        prompt += 'clean pure white background, even studio lighting, ';
-        prompt += 'no shadows, perfect for background removal, ';
+        prompt += 'clean studio lighting on pure white background, ';
+        prompt += 'soft even illumination, no harsh shadows, ';
+        prompt += 'perfectly white backdrop for easy background removal, ';
     }
     
-    prompt += 'photorealistic, ultra detailed, 8k quality, professional photography, ';
-    prompt += 'sharp focus, detailed clothing texture, natural standing pose, ';
-    prompt += 'confident posture, professional quality';
+    // Quality parameters
+    prompt += 'photorealistic, highly detailed, sharp focus, ';
+    prompt += '8K quality, professional photography, ';
+    prompt += 'detailed clothing texture, natural fabric wrinkles, ';
+    prompt += 'realistic hair detail, symmetrical composition, ';
+    
+    // NEGATIVE: What to avoid (append at end)
+    prompt += 'NOT side view, NOT profile, NOT three-quarter angle, NOT face visible, NOT front view, NOT diagonal';
     
     return prompt;
 }
