@@ -148,62 +148,44 @@ function buildPrompt(withBackground) {
     const ethnicity = appState.ethnicity || '한국인';
     const clothing = appState.clothing || '회색 정장';
     
-    let prompt = 'Professional studio portrait photograph, full color photography, vibrant colors, ';
+    // Extract age number if possible (e.g., "30대" -> "30")
+    let ageNumber = age.replace(/[^0-9]/g, '');
+    if (!ageNumber) ageNumber = '30'; // default
     
-    // CRITICAL: Upper body only - waist up
-    prompt += 'UPPER BODY SHOT ONLY, torso shot, waist up, from behind, ';
-    prompt += 'cropped at waist level, showing only upper body and head, ';
-    prompt += 'NO full body, NO legs visible, NO feet visible, ';
+    // Base professional prompt structure
+    let prompt = 'Ultra-realistic studio portrait of a single person, photographed from directly behind, centered composition, subject standing upright, head facing forward, shoulders relaxed. ';
     
-    // CRITICAL: Enforce exact back view
-    prompt += 'BACK VIEW ONLY, rear view, shot from directly behind the subject, ';
-    prompt += 'camera positioned exactly at the back of the person, ';
-    prompt += 'back of head perfectly centered in frame, ';
-    prompt += 'person standing with their back to the camera, facing away, ';
-    prompt += 'ZERO degrees rotation, completely straight back view, ';
+    prompt += 'Camera: fixed camera, straight-on back view, eye-level height, medium distance, symmetrical framing. ';
     
-    // Subject details - use Korean terms directly with emphasis
-    prompt += `${age} years old, ${gender} person, `;
-    prompt += `specifically ${ethnicity} ethnicity, `;
-    
-    // If Korean, add specific Korean features
-    if (ethnicity.includes('한국') || ethnicity.toLowerCase().includes('korean')) {
-        prompt += 'Korean person with typical Korean features, Korean hairstyle, Korean skin tone, ';
-    }
-    
-    prompt += `wearing ${clothing}, `;
-    prompt += 'standing upright with perfect posture, ';
-    prompt += 'shoulders level, arms relaxed at sides, ';
-    
-    // Lighting and background
+    // Lighting - adjust based on background choice
     if (withBackground) {
-        prompt += 'dramatic studio lighting on pure black background, ';
-        prompt += 'soft warm rim light highlighting shoulders and neck edges, ';
-        prompt += 'golden backlight creating subtle glow on hair and upper body, ';
-        prompt += 'deep black void background, cinematic low key lighting, ';
-        prompt += 'professional commercial photography, ';
+        prompt += 'Lighting: professional studio lighting, soft key light from above and slightly behind, subtle rim light outlining head and shoulders, deep black seamless background, high contrast but smooth shadow falloff. ';
     } else {
-        prompt += 'clean studio lighting on pure white background, ';
-        prompt += 'soft even illumination, no harsh shadows, ';
-        prompt += 'perfectly white backdrop for easy background removal, ';
+        prompt += 'Lighting: professional studio lighting, soft even illumination, pure white seamless background, minimal shadows, clean separation. ';
     }
     
-    // Quality and style parameters
-    prompt += 'photorealistic, highly detailed, sharp focus, ';
-    prompt += 'full color image, realistic skin tones, natural hair color, ';
-    prompt += 'realistic clothing colors and textures, ';
-    prompt += '8K quality, professional photography, ';
-    prompt += 'detailed clothing texture, natural fabric wrinkles, ';
-    prompt += 'realistic hair detail, symmetrical composition, ';
-    prompt += 'simple composition, clean image, no graphics, no effects, no patterns, ';
-    prompt += 'no abstract elements, no decorative elements, plain background only, ';
+    prompt += 'Style: cinematic realism, minimalistic, luxury editorial photography, extremely clean image, no noise, no grain, high dynamic range, sharp focus, fine skin texture, realistic fabric detail. ';
     
-    // NEGATIVE: What to avoid
-    prompt += 'NOT grayscale, NOT black and white, NOT monochrome, ';
-    prompt += 'NOT full body, NOT legs, NOT feet, NOT lower body, ';
-    prompt += 'NOT side view, NOT profile, NOT three-quarter angle, ';
-    prompt += 'NOT face visible, NOT front view, NOT diagonal, ';
-    prompt += 'NOT rainbow, NOT colorful graphics, NOT abstract art, NOT patterns, NOT decorations';
+    prompt += 'Details: natural body proportions, accurate anatomy, lifelike skin tones, physically correct light behavior, realistic hair shading, precise edge separation from background. ';
+    
+    prompt += 'Environment: empty studio, ';
+    prompt += withBackground ? 'pitch-black background, ' : 'pure white background, ';
+    prompt += 'no props, no text, no watermark, no graphics, no patterns, no decorative elements. ';
+    
+    prompt += 'Quality: 8K resolution, ultra-high detail, professional photography, RAW photo look. ';
+    
+    // Subject description
+    prompt += 'Subject description: ';
+    prompt += `${ageNumber} year old ${gender} of ${ethnicity} ethnicity, `;
+    prompt += `wearing ${clothing}, `;
+    prompt += 'natural hairstyle appropriate for the ethnicity, ';
+    prompt += 'posture: neutral and calm, standing naturally. ';
+    
+    // Framing - upper body only
+    prompt += 'Framing: upper body shot, cropped at waist level, showing head, neck, shoulders, back, and upper torso only, no legs, no feet, no lower body. ';
+    
+    // Additional negatives to prevent weird results
+    prompt += 'NOT: colorful stripes, NOT rainbow patterns, NOT graphic designs on body, NOT tattoos unless specified, NOT body paint, NOT decorations, NOT abstract elements, NOT multiple people, NOT side view, NOT profile view, NOT face visible.';
     
     return prompt;
 }
