@@ -125,6 +125,18 @@ function setupEventListeners() {
 async function generateImage(withBackground) {
     appState.includeBackground = withBackground;
     
+    // Get API key
+    const apiKey = document.getElementById('api-key-input').value.trim();
+    if (!apiKey) {
+        showError('Replicate API 키를 입력해주세요!');
+        return;
+    }
+    
+    if (!apiKey.startsWith('r8_')) {
+        showError('올바른 Replicate API 키 형식이 아닙니다. (r8_로 시작해야 합니다)');
+        return;
+    }
+    
     // Show progress
     showProgress('이미지 생성 중...');
     hideError();
@@ -135,48 +147,134 @@ async function generateImage(withBackground) {
         // Build prompt
         const prompt = buildPrompt(withBackground);
         
-        // Call API
+        // Call Replicate API directly
         showProgress('AI가 이미지를 생성하고 있습니다...');
-        const response = await fetch('/api/generate-image', {
+        
+        // Create prediction
+        const createResponse = await fetch('https://api.replicate.com/v1/predictions', {
             method: 'POST',
             headers: {
+                'Authorization': `Token ${apiKey}`,
                 'Content-Type': 'application/json',
+                'Prefer': 'wait'
             },
             body: JSON.stringify({
-                prompt: prompt,
-                withBackground: withBackground
+                version: "5599ed30703defd1d160a25a63321b4dec97101d98b4674bcc56e41f62f35637",
+                input: {
+                    prompt: prompt,
+                    go_fast: true,
+                    megapixels: "1",
+                    num_outputs: 1,
+                    aspect_ratio: "2:3",
+                    output_format: "png",
+                    output_quality: 100,
+                    num_inference_steps: 4
+                }
             })
         });
         
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || '이미지 생성 실패');
+        if (!createResponse.ok) {
+            const errorText = await createResponse.text();
+            console.error('Replicate API error:', errorText);
+            throw new Error('이미지 생성 API 오류가 발생했습니다. API 키를 확인해주세요.');
         }
         
-        const data = await response.json();
+        let prediction = await createResponse.json();
+        console.log('Prediction created:', prediction.id);
+        
+        // Wait for completion
+        let attempts = 0;
+        const maxAttempts = 60;
+        
+        while (attempts < maxAttempts && prediction.status !== 'succeeded' && prediction.status !== 'failed') {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            const statusResponse = await fetch(
+                `https://api.replicate.com/v1/predictions/${prediction.id}`,
+                {
+                    headers: {
+                        'Authorization': `Token ${apiKey}`,
+                    },
+                }
+            );
+            
+            prediction = await statusResponse.json();
+            attempts++;
+            
+            if (attempts % 5 === 0) {
+                showProgress(`이미지 생성 중... (${attempts}초)`);
+            }
+        }
+        
+        if (prediction.status === 'failed') {
+            throw new Error(prediction.error || '이미지 생성에 실패했습니다.');
+        }
+        
+        if (prediction.status !== 'succeeded') {
+            throw new Error('이미지 생성 시간이 초과되었습니다. 다시 시도해주세요.');
+        }
+        
+        const imageUrl = prediction.output?.[0];
+        
+        if (!imageUrl) {
+            throw new Error('생성된 이미지를 찾을 수 없습니다.');
+        }
         
         // Handle background removal if needed
-        if (!withBackground && data.imageUrl) {
+        if (!withBackground) {
             showProgress('배경 제거 중...');
             
-            const bgResponse = await fetch('/api/remove-background', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    imageUrl: data.imageUrl
-                })
-            });
-            
-            if (bgResponse.ok) {
-                const bgData = await bgResponse.json();
-                appState.generatedImage = bgData.transparentImageUrl || data.imageUrl;
-            } else {
-                appState.generatedImage = data.imageUrl;
+            try {
+                const bgCreateResponse = await fetch('https://api.replicate.com/v1/predictions', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Token ${apiKey}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        version: "95fcc2a26d3899cd6c2691c900465aaeff466285a65c14638cc5f36f34befaf1",
+                        input: {
+                            image: imageUrl
+                        }
+                    })
+                });
+                
+                if (bgCreateResponse.ok) {
+                    let bgPrediction = await bgCreateResponse.json();
+                    
+                    let bgAttempts = 0;
+                    const bgMaxAttempts = 30;
+                    
+                    while (bgAttempts < bgMaxAttempts && bgPrediction.status !== 'succeeded' && bgPrediction.status !== 'failed') {
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        
+                        const bgStatusResponse = await fetch(
+                            `https://api.replicate.com/v1/predictions/${bgPrediction.id}`,
+                            {
+                                headers: {
+                                    'Authorization': `Token ${apiKey}`,
+                                },
+                            }
+                        );
+                        
+                        bgPrediction = await bgStatusResponse.json();
+                        bgAttempts++;
+                    }
+                    
+                    if (bgPrediction.status === 'succeeded' && bgPrediction.output) {
+                        appState.generatedImage = bgPrediction.output;
+                    } else {
+                        appState.generatedImage = imageUrl;
+                    }
+                } else {
+                    appState.generatedImage = imageUrl;
+                }
+            } catch (bgError) {
+                console.error('Background removal error:', bgError);
+                appState.generatedImage = imageUrl;
             }
         } else {
-            appState.generatedImage = data.imageUrl;
+            appState.generatedImage = imageUrl;
         }
         
         // Show result
