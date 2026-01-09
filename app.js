@@ -2,7 +2,7 @@
 let appState = {
     age: '성인',
     gender: '남성',
-    ethnicity: '동아시아',
+    ethnicity: '한국인',
     clothing: '정장',
     imageWithBg: null,
     imageWithoutBg: null
@@ -24,6 +24,7 @@ const translations = {
         '중성': 'gender-neutral person'
     },
     ethnicity: {
+        '한국인': 'Korean',
         '동아시아': 'East Asian',
         '서양': 'Caucasian',
         '아프리카': 'African',
@@ -230,7 +231,7 @@ function buildPrompt(withBackground) {
     const ethnicity = translations.ethnicity[appState.ethnicity] || appState.ethnicity;
     const clothing = translations.clothing[appState.clothing] || appState.clothing;
     
-    let prompt = 'Professional studio portrait photograph, ';
+    let prompt = 'Professional studio portrait photograph, full color photography, vibrant colors, ';
     
     // CRITICAL: Enforce exact back view with multiple strong directives
     prompt += 'BACK VIEW ONLY, shot from directly behind the subject, ';
@@ -241,7 +242,7 @@ function buildPrompt(withBackground) {
     prompt += 'rear view photograph, viewed from behind, ';
     
     // Subject details
-    prompt += `${age} ${ethnicity} ${gender}, `;
+    prompt += `${age} ${ethnicity}, ${gender}, `;
     prompt += `wearing ${clothing}, `;
     prompt += 'standing upright with perfect posture, ';
     prompt += 'shoulders level, arms relaxed at sides, ';
@@ -262,11 +263,14 @@ function buildPrompt(withBackground) {
     
     // Quality parameters
     prompt += 'photorealistic, highly detailed, sharp focus, ';
+    prompt += 'full color image, realistic skin tones, natural hair color, ';
+    prompt += 'realistic clothing colors and textures, ';
     prompt += '8K quality, professional photography, ';
     prompt += 'detailed clothing texture, natural fabric wrinkles, ';
     prompt += 'realistic hair detail, symmetrical composition, ';
     
     // NEGATIVE: What to avoid (append at end)
+    prompt += 'NOT grayscale, NOT black and white, NOT monochrome, ';
     prompt += 'NOT side view, NOT profile, NOT three-quarter angle, NOT face visible, NOT front view, NOT diagonal';
     
     return prompt;
