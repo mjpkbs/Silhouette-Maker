@@ -4,8 +4,8 @@ let appState = {
     gender: '남성',
     ethnicity: '동아시아',
     clothing: '정장',
-    generatedImage: null,
-    includeBackground: false
+    imageWithBg: null,
+    imageWithoutBg: null
 };
 
 // Translation maps
@@ -115,12 +115,12 @@ function updateButtonStates(containerSelector, value, type) {
 }
 
 function setupEventListeners() {
-    // Generate buttons
-    document.getElementById('btn-transparent').addEventListener('click', () => generateImage(false));
-    document.getElementById('btn-background').addEventListener('click', () => generateImage(true));
+    // Generate button
+    document.getElementById('btn-generate').addEventListener('click', generateImage);
     
-    // Download button
-    document.getElementById('btn-download').addEventListener('click', downloadImage);
+    // Download buttons
+    document.getElementById('btn-download-with-bg').addEventListener('click', () => downloadImage(true));
+    document.getElementById('btn-download-no-bg').addEventListener('click', () => downloadImage(false));
     
     // API key input - save to localStorage on change
     document.getElementById('api-key-input').addEventListener('input', (e) => {
@@ -141,9 +141,7 @@ function saveApiKey(apiKey) {
     }
 }
 
-async function generateImage(withBackground) {
-    appState.includeBackground = withBackground;
-    
+async function generateImage() {
     // Get API key
     const apiKey = document.getElementById('api-key-input').value.trim();
     if (!apiKey) {
@@ -163,11 +161,11 @@ async function generateImage(withBackground) {
     disableButtons();
     
     try {
-        // Build prompt
-        const prompt = buildPrompt(withBackground);
+        // Build prompt for image with background
+        const prompt = buildPrompt(true);
         
-        // Call serverless API
-        showProgress('AI가 이미지를 생성하고 있습니다...');
+        // Step 1: Generate image with background
+        showProgress('AI가 이미지를 생성하고 있습니다... (1/2)');
         
         const response = await fetch('/api/generate-image', {
             method: 'POST',
@@ -176,7 +174,7 @@ async function generateImage(withBackground) {
             },
             body: JSON.stringify({
                 prompt: prompt,
-                withBackground: withBackground,
+                withBackground: true,
                 apiKey: apiKey
             })
         });
@@ -187,30 +185,28 @@ async function generateImage(withBackground) {
         }
         
         const data = await response.json();
+        appState.imageWithBg = data.imageUrl;
         
-        // Handle background removal if needed
-        if (!withBackground && data.imageUrl) {
-            showProgress('배경 제거 중...');
-            
-            const bgResponse = await fetch('/api/remove-background', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    imageUrl: data.imageUrl,
-                    apiKey: apiKey
-                })
-            });
-            
-            if (bgResponse.ok) {
-                const bgData = await bgResponse.json();
-                appState.generatedImage = bgData.transparentImageUrl || data.imageUrl;
-            } else {
-                appState.generatedImage = data.imageUrl;
-            }
+        // Step 2: Remove background
+        showProgress('배경 제거 중... (2/2)');
+        
+        const bgResponse = await fetch('/api/remove-background', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                imageUrl: data.imageUrl,
+                apiKey: apiKey
+            })
+        });
+        
+        if (bgResponse.ok) {
+            const bgData = await bgResponse.json();
+            appState.imageWithoutBg = bgData.transparentImageUrl || data.imageUrl;
         } else {
-            appState.generatedImage = data.imageUrl;
+            // Fallback to original if background removal fails
+            appState.imageWithoutBg = data.imageUrl;
         }
         
         // Show result
@@ -234,23 +230,27 @@ function buildPrompt(withBackground) {
     const ethnicity = translations.ethnicity[appState.ethnicity] || appState.ethnicity;
     const clothing = translations.clothing[appState.clothing] || appState.clothing;
     
-    let prompt = 'Professional high-quality photograph, ';
-    prompt += 'REAR VIEW ONLY, back view, person facing away from camera, ';
-    prompt += 'back of head visible, no face visible, view from behind, ';
+    let prompt = 'Professional high-quality studio photograph, ';
+    prompt += 'STRICTLY REAR VIEW ONLY, person facing directly away from camera, ';
+    prompt += 'back of head centered, completely straight posture, spine aligned, ';
+    prompt += 'standing perfectly upright, shoulders level, head facing straight forward, ';
+    prompt += 'NO turning, NO side angle, NO profile view, ONLY direct back view, ';
     prompt += `${age} ${ethnicity} ${gender} person, `;
     prompt += `wearing ${clothing}, `;
-    prompt += 'full body shot from behind, centered composition, ';
+    prompt += 'full body shot from directly behind, perfectly centered composition, ';
+    prompt += 'symmetrical pose, arms naturally at sides or slightly relaxed, ';
     
     if (withBackground) {
-        prompt += 'elegant dark gradient background, studio lighting with subtle rim light, ';
-        prompt += 'professional photography, dramatic lighting, ';
+        prompt += 'dramatic dark gradient background, professional studio lighting, ';
+        prompt += 'subtle rim lighting on shoulders, cinematic atmosphere, ';
     } else {
-        prompt += 'isolated on pure white background for easy background removal, ';
-        prompt += 'clean studio lighting, simple background, ';
+        prompt += 'clean pure white background, even studio lighting, ';
+        prompt += 'no shadows, perfect for background removal, ';
     }
     
-    prompt += 'photorealistic, high resolution, professional quality, ';
-    prompt += 'detailed clothing texture, natural pose, standing upright';
+    prompt += 'photorealistic, ultra detailed, 8k quality, professional photography, ';
+    prompt += 'sharp focus, detailed clothing texture, natural standing pose, ';
+    prompt += 'confident posture, professional quality';
     
     return prompt;
 }
@@ -284,22 +284,16 @@ function showPreview() {
     const badge = document.getElementById('transparent-badge');
     const downloadSection = document.getElementById('download-section');
     const imageInfo = document.getElementById('image-info');
-    const bgType = document.getElementById('bg-type');
     
     placeholder.classList.add('hidden');
     preview.classList.remove('hidden');
     downloadSection.classList.remove('hidden');
     
-    image.src = appState.generatedImage;
-    
-    if (!appState.includeBackground) {
-        badge.classList.remove('hidden');
-    } else {
-        badge.classList.add('hidden');
-    }
+    // Show image with background by default
+    image.src = appState.imageWithBg;
+    badge.classList.add('hidden'); // Hide badge since we're showing with background
     
     imageInfo.textContent = `${appState.age} ${appState.gender} (${appState.ethnicity}), ${appState.clothing}`;
-    bgType.textContent = appState.includeBackground ? '포함' : '투명';
 }
 
 function hidePreview() {
@@ -313,25 +307,26 @@ function hidePreview() {
 }
 
 function disableButtons() {
-    document.getElementById('btn-transparent').disabled = true;
-    document.getElementById('btn-background').disabled = true;
+    document.getElementById('btn-generate').disabled = true;
 }
 
 function enableButtons() {
-    document.getElementById('btn-transparent').disabled = false;
-    document.getElementById('btn-background').disabled = false;
+    document.getElementById('btn-generate').disabled = false;
 }
 
-async function downloadImage() {
-    if (!appState.generatedImage) return;
+async function downloadImage(withBg) {
+    const imageUrl = withBg ? appState.imageWithBg : appState.imageWithoutBg;
+    
+    if (!imageUrl) return;
     
     try {
-        const response = await fetch(appState.generatedImage);
+        const response = await fetch(imageUrl);
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         
         const link = document.createElement('a');
-        const filename = `silhouette-${appState.age}-${appState.gender}-${appState.ethnicity}-${Date.now()}.png`;
+        const bgType = withBg ? 'with-bg' : 'transparent';
+        const filename = `silhouette-${appState.age}-${appState.gender}-${appState.ethnicity}-${bgType}-${Date.now()}.png`;
         link.download = filename;
         link.href = url;
         link.click();

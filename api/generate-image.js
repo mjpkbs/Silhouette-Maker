@@ -27,7 +27,9 @@ module.exports = async (req, res) => {
   try {
     console.log('🎨 이미지 생성 시작');
 
-    // Create prediction
+    // Create prediction with nanobanana model
+    // TODO: Replace version below with actual nanobanana model version
+    // Find it at: https://replicate.com/explore or search "nanobanana"
     const createResponse = await fetch('https://api.replicate.com/v1/predictions', {
       method: 'POST',
       headers: {
@@ -36,7 +38,7 @@ module.exports = async (req, res) => {
         'Prefer': 'wait'
       },
       body: JSON.stringify({
-        version: "5599ed30703defd1d160a25a63321b4dec97101d98b4674bcc56e41f62f35637",
+        version: "5599ed30703defd1d160a25a63321b4dec97101d98b4674bcc56e41f62f35637", // REPLACE WITH NANOBANANA VERSION
         input: {
           prompt: prompt,
           go_fast: true,
