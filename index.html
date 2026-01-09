@@ -33,24 +33,6 @@
             min-height: 100vh;
         }
         
-        .btn-active {
-            background: rgb(37, 99, 235);
-            color: white;
-            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-            transform: scale(1.05);
-            ring: 4px;
-        }
-        
-        .btn-inactive {
-            background: white;
-            color: rgb(55, 65, 81);
-        }
-        
-        .btn-inactive:hover {
-            background: rgb(219, 234, 254);
-            transform: scale(1.05);
-        }
-        
         .loader {
             border: 3px solid #f3f4f6;
             border-top: 3px solid #3b82f6;
@@ -106,72 +88,48 @@
             <div class="grid lg:grid-cols-5 gap-8 p-8">
                 <!-- Left Panel - Controls -->
                 <div class="lg:col-span-2 space-y-6">
-                    <!-- Age Selection -->
+                    <!-- Age Input -->
                     <div class="bg-gradient-to-br from-blue-50 to-purple-50 p-6 rounded-xl">
                         <label class="block text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
                             <span class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm">1</span>
                             연령대
                         </label>
-                        <div class="grid grid-cols-3 gap-2" id="age-buttons">
-                            <button class="btn-option px-4 py-3 rounded-lg font-medium transition-all" data-age="어린이">어린이</button>
-                            <button class="btn-option px-4 py-3 rounded-lg font-medium transition-all" data-age="청소년">청소년</button>
-                            <button class="btn-option px-4 py-3 rounded-lg font-medium transition-all" data-age="청년">청년</button>
-                            <button class="btn-option btn-active px-4 py-3 rounded-lg font-medium transition-all" data-age="성인">성인</button>
-                            <button class="btn-option px-4 py-3 rounded-lg font-medium transition-all" data-age="중년">중년</button>
-                            <button class="btn-option px-4 py-3 rounded-lg font-medium transition-all" data-age="노년">노년</button>
-                        </div>
+                        <input type="text" id="age-input" value="30대" placeholder="예: 20대, 30대, 40대..." 
+                            class="w-full px-4 py-3 border-2 border-blue-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
+                        <p class="mt-2 text-xs text-gray-500">예시: 20대, 30대, 40대, 50대</p>
                     </div>
 
-                    <!-- Gender Selection -->
+                    <!-- Gender Input -->
                     <div class="bg-gradient-to-br from-purple-50 to-pink-50 p-6 rounded-xl">
                         <label class="block text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
                             <span class="w-8 h-8 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm">2</span>
                             성별
                         </label>
-                        <div class="grid grid-cols-3 gap-2" id="gender-buttons">
-                            <button class="btn-option btn-active px-4 py-3 rounded-lg font-medium transition-all" data-gender="남성">남성</button>
-                            <button class="btn-option px-4 py-3 rounded-lg font-medium transition-all" data-gender="여성">여성</button>
-                            <button class="btn-option px-4 py-3 rounded-lg font-medium transition-all" data-gender="중성">중성</button>
-                        </div>
+                        <input type="text" id="gender-input" value="남성" placeholder="예: 남성, 여성..." 
+                            class="w-full px-4 py-3 border-2 border-purple-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all">
+                        <p class="mt-2 text-xs text-gray-500">예시: 남성, 여성, 중성</p>
                     </div>
 
-                    <!-- Ethnicity Selection -->
+                    <!-- Ethnicity Input -->
                     <div class="bg-gradient-to-br from-pink-50 to-orange-50 p-6 rounded-xl">
                         <label class="block text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
                             <span class="w-8 h-8 bg-pink-600 text-white rounded-full flex items-center justify-center text-sm">3</span>
-                            인종
+                            인종 / 국적
                         </label>
-                        <div class="grid grid-cols-3 gap-2" id="ethnicity-buttons">
-                            <button class="btn-option btn-active px-4 py-3 rounded-lg font-medium transition-all" data-ethnicity="한국인">한국인</button>
-                            <button class="btn-option px-4 py-3 rounded-lg font-medium transition-all" data-ethnicity="동아시아">동아시아</button>
-                            <button class="btn-option px-4 py-3 rounded-lg font-medium transition-all" data-ethnicity="서양">서양</button>
-                            <button class="btn-option px-4 py-3 rounded-lg font-medium transition-all" data-ethnicity="아프리카">아프리카</button>
-                            <button class="btn-option px-4 py-3 rounded-lg font-medium transition-all" data-ethnicity="중동">중동</button>
-                            <button class="btn-option px-4 py-3 rounded-lg font-medium transition-all" data-ethnicity="남아시아">남아시아</button>
-                            <button class="btn-option px-4 py-3 rounded-lg font-medium transition-all" data-ethnicity="라틴">라틴</button>
-                        </div>
+                        <input type="text" id="ethnicity-input" value="한국인" placeholder="예: 한국인, 일본인, 미국인..." 
+                            class="w-full px-4 py-3 border-2 border-pink-200 rounded-lg focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-all">
+                        <p class="mt-2 text-xs text-gray-500">예시: 한국인, 일본인, 중국인, 미국인, 영국인 등</p>
                     </div>
 
-                    <!-- Clothing Selection -->
+                    <!-- Clothing Input -->
                     <div class="bg-gradient-to-br from-orange-50 to-yellow-50 p-6 rounded-xl">
                         <label class="block text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
                             <span class="w-8 h-8 bg-orange-600 text-white rounded-full flex items-center justify-center text-sm">4</span>
                             복장 / 직업
                         </label>
-                        <div class="grid grid-cols-2 gap-2 mb-3" id="clothing-buttons">
-                            <button class="btn-option btn-active px-3 py-2 rounded-lg text-sm font-medium transition-all" data-clothing="정장">정장</button>
-                            <button class="btn-option px-3 py-2 rounded-lg text-sm font-medium transition-all" data-clothing="캐주얼">캐주얼</button>
-                            <button class="btn-option px-3 py-2 rounded-lg text-sm font-medium transition-all" data-clothing="경찰관 제복">경찰관 제복</button>
-                            <button class="btn-option px-3 py-2 rounded-lg text-sm font-medium transition-all" data-clothing="판사 법복">판사 법복</button>
-                            <button class="btn-option px-3 py-2 rounded-lg text-sm font-medium transition-all" data-clothing="소방관 방화복">소방관 방화복</button>
-                            <button class="btn-option px-3 py-2 rounded-lg text-sm font-medium transition-all" data-clothing="의사 가운">의사 가운</button>
-                            <button class="btn-option px-3 py-2 rounded-lg text-sm font-medium transition-all" data-clothing="배낭을 멘 학생">배낭을 멘 학생</button>
-                            <button class="btn-option px-3 py-2 rounded-lg text-sm font-medium transition-all" data-clothing="운동복">운동복</button>
-                            <button class="btn-option px-3 py-2 rounded-lg text-sm font-medium transition-all" data-clothing="작업복">작업복</button>
-                            <button class="btn-option px-3 py-2 rounded-lg text-sm font-medium transition-all" data-clothing="한복">한복</button>
-                        </div>
-                        <input type="text" id="clothing-input" value="정장" placeholder="또는 직접 입력..." 
+                        <input type="text" id="clothing-input" value="회색 정장" placeholder="예: 흰색 셔츠, 경찰관 제복, 의사 가운..." 
                             class="w-full px-4 py-3 border-2 border-orange-200 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all">
+                        <p class="mt-2 text-xs text-gray-500">예시: 흰색 셔츠, 회색 정장, 경찰관 제복, 의사 가운, 한복 등</p>
                     </div>
 
                     <!-- Generate Button -->

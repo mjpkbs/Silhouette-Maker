@@ -1,119 +1,18 @@
 // App State
 let appState = {
-    age: '성인',
+    age: '30대',
     gender: '남성',
     ethnicity: '한국인',
-    clothing: '정장',
+    clothing: '회색 정장',
     imageWithBg: null,
     imageWithoutBg: null
 };
 
-// Translation maps
-const translations = {
-    age: {
-        '어린이': 'child aged 6-12',
-        '청소년': 'teenager aged 13-17',
-        '청년': 'young adult aged 18-29',
-        '성인': 'adult aged 30-45',
-        '중년': 'middle-aged person aged 46-60',
-        '노년': 'elderly person aged 60+'
-    },
-    gender: {
-        '남성': 'male',
-        '여성': 'female',
-        '중성': 'gender-neutral person'
-    },
-    ethnicity: {
-        '한국인': 'Korean',
-        '동아시아': 'East Asian',
-        '서양': 'Caucasian',
-        '아프리카': 'African',
-        '중동': 'Middle Eastern',
-        '남아시아': 'South Asian',
-        '라틴': 'Latin American'
-    },
-    clothing: {
-        '정장': 'formal business suit',
-        '캐주얼': 'casual clothing',
-        '경찰관 제복': 'police officer uniform',
-        '판사 법복': 'judge robe',
-        '소방관 방화복': 'firefighter protective gear',
-        '의사 가운': 'doctor white coat',
-        '배낭을 멘 학생': 'student wearing backpack',
-        '운동복': 'athletic sportswear',
-        '작업복': 'work uniform',
-        '한복': 'traditional Korean hanbok'
-    }
-};
-
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
-    initializeButtons();
     setupEventListeners();
     loadApiKey();
 });
-
-function initializeButtons() {
-    // Age buttons
-    document.querySelectorAll('#age-buttons .btn-option').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const age = btn.dataset.age;
-            appState.age = age;
-            updateButtonStates('#age-buttons', age, 'age');
-        });
-    });
-
-    // Gender buttons
-    document.querySelectorAll('#gender-buttons .btn-option').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const gender = btn.dataset.gender;
-            appState.gender = gender;
-            updateButtonStates('#gender-buttons', gender, 'gender');
-        });
-    });
-
-    // Ethnicity buttons
-    document.querySelectorAll('#ethnicity-buttons .btn-option').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const ethnicity = btn.dataset.ethnicity;
-            appState.ethnicity = ethnicity;
-            updateButtonStates('#ethnicity-buttons', ethnicity, 'ethnicity');
-        });
-    });
-
-    // Clothing buttons
-    document.querySelectorAll('#clothing-buttons .btn-option').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const clothing = btn.dataset.clothing;
-            appState.clothing = clothing;
-            document.getElementById('clothing-input').value = clothing;
-            updateButtonStates('#clothing-buttons', clothing, 'clothing');
-        });
-    });
-
-    // Clothing input
-    document.getElementById('clothing-input').addEventListener('input', (e) => {
-        appState.clothing = e.target.value;
-        // Remove active state from preset buttons
-        document.querySelectorAll('#clothing-buttons .btn-option').forEach(btn => {
-            btn.classList.remove('btn-active');
-            btn.classList.add('btn-inactive');
-        });
-    });
-}
-
-function updateButtonStates(containerSelector, value, type) {
-    document.querySelectorAll(`${containerSelector} .btn-option`).forEach(btn => {
-        const btnValue = btn.dataset[type];
-        if (btnValue === value) {
-            btn.classList.remove('btn-inactive');
-            btn.classList.add('btn-active');
-        } else {
-            btn.classList.remove('btn-active');
-            btn.classList.add('btn-inactive');
-        }
-    });
-}
 
 function setupEventListeners() {
     // Generate button
@@ -122,6 +21,23 @@ function setupEventListeners() {
     // Download buttons
     document.getElementById('btn-download-with-bg').addEventListener('click', () => downloadImage(true));
     document.getElementById('btn-download-no-bg').addEventListener('click', () => downloadImage(false));
+    
+    // Input fields - update state on change
+    document.getElementById('age-input').addEventListener('input', (e) => {
+        appState.age = e.target.value;
+    });
+    
+    document.getElementById('gender-input').addEventListener('input', (e) => {
+        appState.gender = e.target.value;
+    });
+    
+    document.getElementById('ethnicity-input').addEventListener('input', (e) => {
+        appState.ethnicity = e.target.value;
+    });
+    
+    document.getElementById('clothing-input').addEventListener('input', (e) => {
+        appState.clothing = e.target.value;
+    });
     
     // API key input - save to localStorage on change
     document.getElementById('api-key-input').addEventListener('input', (e) => {
@@ -226,29 +142,40 @@ async function generateImage() {
 }
 
 function buildPrompt(withBackground) {
-    const age = translations.age[appState.age] || appState.age;
-    const gender = translations.gender[appState.gender] || appState.gender;
-    const ethnicity = translations.ethnicity[appState.ethnicity] || appState.ethnicity;
-    const clothing = translations.clothing[appState.clothing] || appState.clothing;
+    // Get values directly from inputs
+    const age = appState.age || '30대';
+    const gender = appState.gender || '남성';
+    const ethnicity = appState.ethnicity || '한국인';
+    const clothing = appState.clothing || '회색 정장';
     
     let prompt = 'Professional studio portrait photograph, full color photography, vibrant colors, ';
     
-    // CRITICAL: Enforce exact back view with multiple strong directives
-    prompt += 'BACK VIEW ONLY, shot from directly behind the subject, ';
+    // CRITICAL: Upper body only - waist up
+    prompt += 'UPPER BODY SHOT ONLY, torso shot, waist up, from behind, ';
+    prompt += 'cropped at waist level, showing only upper body and head, ';
+    prompt += 'NO full body, NO legs visible, NO feet visible, ';
+    
+    // CRITICAL: Enforce exact back view
+    prompt += 'BACK VIEW ONLY, rear view, shot from directly behind the subject, ';
     prompt += 'camera positioned exactly at the back of the person, ';
     prompt += 'back of head perfectly centered in frame, ';
     prompt += 'person standing with their back to the camera, facing away, ';
     prompt += 'ZERO degrees rotation, completely straight back view, ';
-    prompt += 'rear view photograph, viewed from behind, ';
     
-    // Subject details
-    prompt += `${age} ${ethnicity}, ${gender}, `;
+    // Subject details - use Korean terms directly with emphasis
+    prompt += `${age} years old, ${gender} person, `;
+    prompt += `specifically ${ethnicity} ethnicity, `;
+    
+    // If Korean, add specific Korean features
+    if (ethnicity.includes('한국') || ethnicity.toLowerCase().includes('korean')) {
+        prompt += 'Korean person with typical Korean features, Korean hairstyle, Korean skin tone, ';
+    }
+    
     prompt += `wearing ${clothing}, `;
     prompt += 'standing upright with perfect posture, ';
     prompt += 'shoulders level, arms relaxed at sides, ';
-    prompt += 'full body visible from behind, ';
     
-    // Lighting and background - matching Image 2 style
+    // Lighting and background
     if (withBackground) {
         prompt += 'dramatic studio lighting on pure black background, ';
         prompt += 'soft warm rim light highlighting shoulders and neck edges, ';
@@ -261,17 +188,22 @@ function buildPrompt(withBackground) {
         prompt += 'perfectly white backdrop for easy background removal, ';
     }
     
-    // Quality parameters
+    // Quality and style parameters
     prompt += 'photorealistic, highly detailed, sharp focus, ';
     prompt += 'full color image, realistic skin tones, natural hair color, ';
     prompt += 'realistic clothing colors and textures, ';
     prompt += '8K quality, professional photography, ';
     prompt += 'detailed clothing texture, natural fabric wrinkles, ';
     prompt += 'realistic hair detail, symmetrical composition, ';
+    prompt += 'simple composition, clean image, no graphics, no effects, no patterns, ';
+    prompt += 'no abstract elements, no decorative elements, plain background only, ';
     
-    // NEGATIVE: What to avoid (append at end)
+    // NEGATIVE: What to avoid
     prompt += 'NOT grayscale, NOT black and white, NOT monochrome, ';
-    prompt += 'NOT side view, NOT profile, NOT three-quarter angle, NOT face visible, NOT front view, NOT diagonal';
+    prompt += 'NOT full body, NOT legs, NOT feet, NOT lower body, ';
+    prompt += 'NOT side view, NOT profile, NOT three-quarter angle, ';
+    prompt += 'NOT face visible, NOT front view, NOT diagonal, ';
+    prompt += 'NOT rainbow, NOT colorful graphics, NOT abstract art, NOT patterns, NOT decorations';
     
     return prompt;
 }
@@ -347,7 +279,10 @@ async function downloadImage(withBg) {
         
         const link = document.createElement('a');
         const bgType = withBg ? 'with-bg' : 'transparent';
-        const filename = `silhouette-${appState.age}-${appState.gender}-${appState.ethnicity}-${bgType}-${Date.now()}.png`;
+        const safeAge = appState.age.replace(/[^a-zA-Z0-9가-힣]/g, '');
+        const safeGender = appState.gender.replace(/[^a-zA-Z0-9가-힣]/g, '');
+        const safeEthnicity = appState.ethnicity.replace(/[^a-zA-Z0-9가-힣]/g, '');
+        const filename = `silhouette-${safeAge}-${safeGender}-${safeEthnicity}-${bgType}-${Date.now()}.png`;
         link.download = filename;
         link.href = url;
         link.click();
