@@ -1,7 +1,17 @@
-// pages/api/remove-background.js
-// Replicate RMBG 모델을 사용한 배경 제거
+// api/remove-background.js
+// Vercel Serverless Function
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
+  // CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+  
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -30,7 +40,7 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        version: "95fcc2a26d3899cd6c2691c900465aaeff466285a65c14638cc5f36f34befaf1", // RMBG-1.4
+        version: "95fcc2a26d3899cd6c2691c900465aaeff466285a65c14638cc5f36f34befaf1",
         input: {
           image: imageUrl
         }
@@ -70,7 +80,6 @@ export default async function handler(req, res) {
     
     if (prediction.status === 'failed') {
       console.error('❌ 배경 제거 실패:', prediction.error);
-      // 배경 제거 실패 시 원본 반환
       return res.status(200).json({ 
         transparentImageUrl: imageUrl,
         warning: '배경 제거에 실패하여 원본 이미지를 반환합니다.'
@@ -104,19 +113,9 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('💥 배경 제거 오류:', error);
-    // 오류 발생 시 원본 이미지 반환
     return res.status(200).json({ 
       transparentImageUrl: imageUrl,
       warning: '배경 제거 중 오류가 발생하여 원본 이미지를 반환합니다.'
     });
   }
-}
-
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb',
-    },
-  },
-  maxDuration: 60,
 };

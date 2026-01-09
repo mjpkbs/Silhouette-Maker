@@ -1,7 +1,17 @@
-// pages/api/generate-image.js
-// Replicate Flux API를 사용한 이미지 생성
+// api/generate-image.js
+// Vercel Serverless Function
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
+  // CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+  
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -27,7 +37,7 @@ export default async function handler(req, res) {
         'Prefer': 'wait'
       },
       body: JSON.stringify({
-        version: "5599ed30703defd1d160a25a63321b4dec97101d98b4674bcc56e41f62f35637", // Flux Schnell
+        version: "5599ed30703defd1d160a25a63321b4dec97101d98b4674bcc56e41f62f35637",
         input: {
           prompt: prompt,
           go_fast: true,
@@ -52,7 +62,7 @@ export default async function handler(req, res) {
 
     // 2. Prediction 완료 대기
     let attempts = 0;
-    const maxAttempts = 60; // 최대 1분 대기
+    const maxAttempts = 60;
     
     while (attempts < maxAttempts && prediction.status !== 'succeeded' && prediction.status !== 'failed') {
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -102,14 +112,4 @@ export default async function handler(req, res) {
       error: error.message || '이미지 생성 중 오류가 발생했습니다.' 
     });
   }
-}
-
-// Vercel 함수 설정
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb',
-    },
-  },
-  maxDuration: 60,
 };
