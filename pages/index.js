@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Download, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 
-export default function SilhouetteGeneratorPro() {
+export default function Home() {
   const [formData, setFormData] = useState({
     age: '성인',
     gender: '남성',
@@ -78,49 +78,6 @@ export default function SilhouetteGeneratorPro() {
     };
   };
 
-  const generateWithReplicate = async (prompt) => {
-    setProgress('Replicate API 호출 중...');
-    
-    // Replicate API 호출
-    const response = await fetch('/api/generate-image', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        prompt: prompt,
-        width: 1024,
-        height: 1536
-      })
-    });
-    
-    if (!response.ok) {
-      throw new Error('이미지 생성 실패');
-    }
-    
-    const data = await response.json();
-    return data.imageUrl;
-  };
-
-  const removeBackground = async (imageUrl) => {
-    setProgress('배경 제거 중...');
-    
-    const response = await fetch('/api/remove-background', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ imageUrl })
-    });
-    
-    if (!response.ok) {
-      throw new Error('배경 제거 실패');
-    }
-    
-    const data = await response.json();
-    return data.transparentImageUrl;
-  };
-
   const generateImage = async (withBg) => {
     setIsLoading(true);
     setError(null);
@@ -149,25 +106,51 @@ export default function SilhouetteGeneratorPro() {
       prompt += `photorealistic, high resolution, professional quality, `;
       prompt += `detailed clothing texture, natural pose, standing upright`;
       
-      // Negative prompt
-      const negativePrompt = `face, frontal view, front view, looking at camera, facial features, eyes, nose, mouth, side view, profile, turned head, multiple people, distorted, blurry, low quality`;
-      
       setProgress('이미지 생성 중...');
       
-      // 실제 API 호출 (프로덕션 환경)
-      // const imageUrl = await generateWithReplicate(prompt);
+      // API 호출
+      const response = await fetch('/api/generate-image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: prompt,
+          withBackground: withBg
+        })
+      });
       
-      // 데모 버전 - 캔버스로 시뮬레이션
-      await simulateImageGeneration(withBg);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '이미지 생성 실패');
+      }
       
-      // 투명 배경 버전 처리
-      // if (!withBg) {
-      //   setProgress('배경 제거 중...');
-      //   const transparentUrl = await removeBackground(imageUrl);
-      //   setGeneratedImage(transparentUrl);
-      // } else {
-      //   setGeneratedImage(imageUrl);
-      // }
+      const data = await response.json();
+      
+      // 배경 제거가 필요한 경우
+      if (!withBg && data.imageUrl) {
+        setProgress('배경 제거 중...');
+        
+        const bgRemovalResponse = await fetch('/api/remove-background', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            imageUrl: data.imageUrl
+          })
+        });
+        
+        if (bgRemovalResponse.ok) {
+          const bgData = await bgRemovalResponse.json();
+          setGeneratedImage(bgData.transparentImageUrl || data.imageUrl);
+        } else {
+          // 배경 제거 실패 시 원본 이미지 사용
+          setGeneratedImage(data.imageUrl);
+        }
+      } else {
+        setGeneratedImage(data.imageUrl);
+      }
       
       setProgress('완료!');
       
@@ -180,91 +163,24 @@ export default function SilhouetteGeneratorPro() {
     }
   };
 
-  // 데모용 시뮬레이션 함수
-  const simulateImageGeneration = async (withBg) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const canvas = document.createElement('canvas');
-        canvas.width = 1024;
-        canvas.height = 1536;
-        const ctx = canvas.getContext('2d');
-        
-        if (withBg) {
-          // 그라데이션 배경
-          const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-          gradient.addColorStop(0, '#2d3748');
-          gradient.addColorStop(0.5, '#1a202c');
-          gradient.addColorStop(1, '#000000');
-          ctx.fillStyle = gradient;
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-        } else {
-          // 체크무늬 배경 (투명도 표시용)
-          const squareSize = 40;
-          for (let y = 0; y < canvas.height; y += squareSize) {
-            for (let x = 0; x < canvas.width; x += squareSize) {
-              ctx.fillStyle = ((x / squareSize + y / squareSize) % 2) === 0 ? '#f0f0f0' : '#ffffff';
-              ctx.fillRect(x, y, squareSize, squareSize);
-            }
-          }
-        }
-        
-        // 실루엣 형태 그리기
-        ctx.save();
-        ctx.translate(canvas.width / 2, canvas.height / 2);
-        
-        // 머리
-        ctx.beginPath();
-        ctx.fillStyle = withBg ? '#4a5568' : '#333333';
-        ctx.ellipse(0, -550, 120, 140, 0, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // 목
-        ctx.fillRect(-40, -420, 80, 80);
-        
-        // 몸통
-        ctx.beginPath();
-        ctx.moveTo(-180, -340);
-        ctx.lineTo(-200, 100);
-        ctx.lineTo(-150, 400);
-        ctx.lineTo(150, 400);
-        ctx.lineTo(200, 100);
-        ctx.lineTo(180, -340);
-        ctx.closePath();
-        ctx.fill();
-        
-        // 팔
-        ctx.fillRect(-300, -300, 110, 600);
-        ctx.fillRect(190, -300, 110, 600);
-        
-        // 다리
-        ctx.fillRect(-140, 400, 100, 300);
-        ctx.fillRect(40, 400, 100, 300);
-        
-        ctx.restore();
-        
-        // 텍스트 오버레이
-        ctx.fillStyle = withBg ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)';
-        ctx.font = 'bold 36px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(`${formData.age} ${formData.gender}`, canvas.width / 2, 100);
-        ctx.fillText(`${formData.ethnicity}`, canvas.width / 2, 150);
-        ctx.fillText(`${formData.clothing}`, canvas.width / 2, 200);
-        
-        const imageUrl = canvas.toDataURL('image/png');
-        setGeneratedImage(imageUrl);
-        resolve();
-      }, 2000);
-    });
-  };
-
-  const downloadImage = () => {
+  const downloadImage = async () => {
     if (!generatedImage) return;
     
-    const link = document.createElement('a');
-    const filename = `silhouette-${formData.age}-${formData.gender}-${formData.ethnicity}-${Date.now()}.png`;
-    link.download = filename;
-    link.href = generatedImage;
-    link.click();
+    try {
+      const response = await fetch(generatedImage);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      const filename = `silhouette-${formData.age}-${formData.gender}-${formData.ethnicity}-${Date.now()}.png`;
+      link.download = filename;
+      link.href = url;
+      link.click();
+      
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Download error:', err);
+    }
   };
 
   return (
@@ -275,7 +191,7 @@ export default function SilhouetteGeneratorPro() {
           <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 p-8 text-white">
             <h1 className="text-5xl font-bold mb-3">실루엣 생성기</h1>
             <p className="text-xl text-white/90">AI 기반 뒷모습 인물 이미지 생성 도구</p>
-            <div className="mt-4 flex gap-3">
+            <div className="mt-4 flex gap-3 flex-wrap">
               <span className="px-3 py-1 bg-white/20 rounded-full text-sm">32-bit PNG</span>
               <span className="px-3 py-1 bg-white/20 rounded-full text-sm">투명 배경 지원</span>
               <span className="px-3 py-1 bg-white/20 rounded-full text-sm">고해상도</span>
@@ -494,20 +410,16 @@ export default function SilhouetteGeneratorPro() {
 
         {/* Info Footer */}
         <div className="mt-8 bg-white/10 backdrop-blur rounded-2xl p-6 text-white">
-          <h3 className="font-bold text-lg mb-3">프로덕션 배포 안내</h3>
           <div className="grid md:grid-cols-2 gap-4 text-sm">
             <div>
-              <p className="font-semibold mb-2">✦ 현재 버전: 데모 (UI 테스트용)</p>
-              <p className="text-white/70">실제 이미지 생성을 위해서는 AI API 통합이 필요합니다.</p>
+              <p className="font-semibold mb-2">✦ AI 이미지 생성</p>
+              <p className="text-white/70">Replicate Flux 모델 사용</p>
             </div>
             <div>
-              <p className="font-semibold mb-2">✦ 추천 서비스</p>
-              <p className="text-white/70">Replicate (Flux), Stability AI, Remove.bg</p>
+              <p className="font-semibold mb-2">✦ 투명 배경</p>
+              <p className="text-white/70">자동 배경 제거 지원</p>
             </div>
           </div>
-          <p className="mt-4 text-white/60 text-xs">
-            implementation-guide.md 파일에서 프로덕션 배포 가이드를 확인하세요.
-          </p>
         </div>
       </div>
     </div>
