@@ -25,9 +25,29 @@ module.exports = async (req, res) => {
   }
 
   try {
-    console.log('🎨 이미지 생성 시작');
+    console.log('🎨 이미지 생성 시작 (img2img mode)');
 
-    // Using Flux Schnell model for better results
+    // Reference image URL - multiple methods to get the correct URL
+    let referenceImageUrl;
+    
+    // Method 1: Check if deployed on Vercel
+    if (process.env.VERCEL_URL) {
+      referenceImageUrl = `https://${process.env.VERCEL_URL}/reference.png`;
+    }
+    // Method 2: Check custom domain (update after deployment)
+    else if (req.headers.host) {
+      referenceImageUrl = `https://${req.headers.host}/reference.png`;
+    }
+    // Method 3: Fallback to hardcoded URL (UPDATE THIS AFTER FIRST DEPLOYMENT!)
+    else {
+      // TODO: Replace with your actual deployed URL after first deployment
+      referenceImageUrl = 'https://your-site.vercel.app/reference.png';
+      // Example: 'https://silhouette-maker.vercel.app/reference.png'
+    }
+    
+    console.log('📸 Reference image URL:', referenceImageUrl);
+
+    // Create prediction with SDXL img2img
     const createResponse = await fetch('https://api.replicate.com/v1/predictions', {
       method: 'POST',
       headers: {
@@ -36,14 +56,15 @@ module.exports = async (req, res) => {
         'Prefer': 'wait'
       },
       body: JSON.stringify({
-        version: "5599ed30703defd1d160a25a63321b4dec97101d98b4674bcc56e41f62f35637", // Flux Schnell
+        version: "39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b", // SDXL img2img
         input: {
+          image: referenceImageUrl,
           prompt: prompt,
-          go_fast: true,
-          num_outputs: 1,
-          aspect_ratio: "2:3",
-          output_format: "png",
-          num_inference_steps: 4
+          prompt_strength: 0.65, // Adjust 0.5-0.8 (lower = more similar to reference)
+          num_inference_steps: 30,
+          guidance_scale: 7.5,
+          scheduler: "K_EULER",
+          num_outputs: 1
         }
       })
     });

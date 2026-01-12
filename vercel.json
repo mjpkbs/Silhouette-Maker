@@ -4,5 +4,11 @@
     "api/**/*.js": {
       "maxDuration": 60
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/reference.png",
+      "destination": "/public/reference.png"
+    }
+  ]
 }

@@ -148,44 +148,41 @@ function buildPrompt(withBackground) {
     const ethnicity = appState.ethnicity || '한국인';
     const clothing = appState.clothing || '회색 정장';
     
-    // Extract age number if possible (e.g., "30대" -> "30")
+    // Extract age number if possible
     let ageNumber = age.replace(/[^0-9]/g, '');
-    if (!ageNumber) ageNumber = '30'; // default
+    if (!ageNumber) ageNumber = '30';
     
-    // Base professional prompt structure
-    let prompt = 'Ultra-realistic studio portrait of a single person, photographed from directly behind, centered composition, subject standing upright, head facing forward, shoulders relaxed. ';
+    // For img2img, we focus on what to CHANGE, not describe everything
+    // The reference image already has the style, lighting, composition
     
-    prompt += 'Camera: fixed camera, straight-on back view, eye-level height, medium distance, symmetrical framing. ';
+    let prompt = 'Professional studio portrait photograph from behind, ';
     
-    // Lighting - adjust based on background choice
+    // Subject - what we want to change
+    prompt += `${ageNumber} year old ${gender} person, ${ethnicity} ethnicity, `;
+    prompt += `wearing ${clothing}, `;
+    
+    // Keep the reference style
+    prompt += 'same exact camera angle and composition as reference, ';
+    prompt += 'same dramatic lighting with golden rim light, ';
+    
+    // Background based on choice
     if (withBackground) {
-        prompt += 'Lighting: professional studio lighting, soft key light from above and slightly behind, subtle rim light outlining head and shoulders, deep black seamless background, high contrast but smooth shadow falloff. ';
+        prompt += 'keep the black background, ';
     } else {
-        prompt += 'Lighting: professional studio lighting, soft even illumination, pure white seamless background, minimal shadows, clean separation. ';
+        prompt += 'pure white background instead of black, ';
     }
     
-    prompt += 'Style: cinematic realism, minimalistic, luxury editorial photography, extremely clean image, no noise, no grain, high dynamic range, sharp focus, fine skin texture, realistic fabric detail. ';
+    // Framing
+    prompt += 'upper body shot, cropped at waist, ';
     
-    prompt += 'Details: natural body proportions, accurate anatomy, lifelike skin tones, physically correct light behavior, realistic hair shading, precise edge separation from background. ';
+    // Quality
+    prompt += 'photorealistic, high quality, professional photography, ';
+    prompt += 'cinematic lighting, editorial style, ';
     
-    prompt += 'Environment: empty studio, ';
-    prompt += withBackground ? 'pitch-black background, ' : 'pure white background, ';
-    prompt += 'no props, no text, no watermark, no graphics, no patterns, no decorative elements. ';
-    
-    prompt += 'Quality: 8K resolution, ultra-high detail, professional photography, RAW photo look. ';
-    
-    // Subject description
-    prompt += 'Subject description: ';
-    prompt += `${ageNumber} year old ${gender} of ${ethnicity} ethnicity, `;
-    prompt += `wearing ${clothing}, `;
-    prompt += 'natural hairstyle appropriate for the ethnicity, ';
-    prompt += 'posture: neutral and calm, standing naturally. ';
-    
-    // Framing - upper body only
-    prompt += 'Framing: upper body shot, cropped at waist level, showing head, neck, shoulders, back, and upper torso only, no legs, no feet, no lower body. ';
-    
-    // Additional negatives to prevent weird results
-    prompt += 'NOT: colorful stripes, NOT rainbow patterns, NOT graphic designs on body, NOT tattoos unless specified, NOT body paint, NOT decorations, NOT abstract elements, NOT multiple people, NOT side view, NOT profile view, NOT face visible.';
+    // What NOT to change/add
+    prompt += 'no patterns, no graphics, no decorations, no text, ';
+    prompt += 'clean and simple, professional, ';
+    prompt += 'NOT side view, NOT face visible, exact back view only.';
     
     return prompt;
 }
