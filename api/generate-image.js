@@ -27,25 +27,20 @@ module.exports = async (req, res) => {
   try {
     console.log('🎨 이미지 생성 시작 (img2img mode)');
 
-    // Reference image URL - multiple methods to get the correct URL
-    let referenceImageUrl;
+    // ============================================
+    // ⭐ IMPORTANT: UPDATE THIS URL! ⭐
+    // ============================================
+    // Upload your reference image to: https://imgbb.com
+    // Then paste the "Direct link" URL below:
     
-    // Method 1: Check if deployed on Vercel
-    if (process.env.VERCEL_URL) {
-      referenceImageUrl = `https://${process.env.VERCEL_URL}/reference.png`;
-    }
-    // Method 2: Check custom domain (update after deployment)
-    else if (req.headers.host) {
-      referenceImageUrl = `https://${req.headers.host}/reference.png`;
-    }
-    // Method 3: Fallback to hardcoded URL (UPDATE THIS AFTER FIRST DEPLOYMENT!)
-    else {
-      // TODO: Replace with your actual deployed URL after first deployment
-      referenceImageUrl = 'https://your-site.vercel.app/reference.png';
-      // Example: 'https://silhouette-maker.vercel.app/reference.png'
-    }
+    const referenceImageUrl = 'PASTE-YOUR-IMAGE-URL-HERE';
     
-    console.log('📸 Reference image URL:', referenceImageUrl);
+    // Example:
+    // const referenceImageUrl = 'https://i.ibb.co/abc123/reference.png';
+    // const referenceImageUrl = 'https://i.imgur.com/abc123.png';
+    // ============================================
+    
+    console.log('📸 Using reference image:', referenceImageUrl);
 
     // Create prediction with SDXL img2img
     const createResponse = await fetch('https://api.replicate.com/v1/predictions', {

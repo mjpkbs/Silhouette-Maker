@@ -1,0 +1,13 @@
+{
+  "name": "silhouette-generator",
+  "version": "1.0.0",
+  "description": "AI-powered silhouette image generator",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx serve .",
+    "start": "npx serve ."
+  },
+  "keywords": ["ai", "image-generation", "silhouette"],
+  "author": "",
+  "license": "MIT"
+}
