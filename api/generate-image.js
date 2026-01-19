@@ -47,9 +47,9 @@ export default async function handler(req, res) {
         input: {
           image: referenceImageUrl,
           prompt: prompt,
-          prompt_strength: 0.8, // 0.8 = More changes to person while keeping style (0.5=very similar, 0.9=very different)
+          prompt_strength: 0.9, // 0.8 = More changes to person while keeping style (0.5=very similar, 0.9=very different)
           num_inference_steps: 30,
-          guidance_scale: 9.0, // Higher = follows prompt more closely (7.5=balanced, 9-10=strict)
+          guidance_scale: 10.0, // Higher = follows prompt more closely (7.5=balanced, 9-10=strict)
           scheduler: "K_EULER",
           num_outputs: 1
         }
