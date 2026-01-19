@@ -10,7 +10,15 @@ export default async function handler(req, res) {
   }
 
   try {
-    console.log('🎨 이미지 생성 시작 (img2img mode)');
+    console.log('🎨 이미지 생성 시작 (bytedance/seedream-4)');
+
+    // ============================================
+    // ⚠️ IMPORTANT: VERIFY MODEL VERSION ⚠️
+    // ============================================
+    // Visit: https://replicate.com/bytedance/seedream-4
+    // Copy the correct version ID from the model page
+    // Replace the version below with the actual version
+    // ============================================
 
     // ============================================
     // ⭐ STEP 1: UPLOAD TO GOOGLE DRIVE ⭐
@@ -23,18 +31,10 @@ export default async function handler(req, res) {
     
     const referenceImageUrl = 'https://drive.google.com/uc?export=view&id=1V9WajtkfRn5dsZTOWxiyqHSwPkOY_Jvh';
     
-    // Example:
-    // Link from Google Drive: https://drive.google.com/file/d/1a2B3c4D5e6F7g8H9i0J/view?usp=sharing
-    // Extract FILE_ID: 1a2B3c4D5e6F7g8H9i0J
-    // Final URL: https://drive.google.com/uc?export=view&id=1a2B3c4D5e6F7g8H9i0J
-    
-    // Alternative (ImgBB):
-    // const referenceImageUrl = 'https://i.ibb.co/abc123/reference.png';
-    // ============================================
-    
     console.log('📸 Using reference image:', referenceImageUrl);
 
-    // Create prediction with SDXL img2img
+    // Create prediction with bytedance/seedream-4
+    // NOTE: Verify this version ID at https://replicate.com/bytedance/seedream-4
     const createResponse = await fetch('https://api.replicate.com/v1/predictions', {
       method: 'POST',
       headers: {
@@ -43,17 +43,18 @@ export default async function handler(req, res) {
         'Prefer': 'wait'
       },
       body: JSON.stringify({
-        version: "39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b", // SDXL img2img
+        version: "70c3b5d8a65ebfb1fddf4e7eb59dfef6b36d9e2ea8d02af5d0fcf5f79d5f07f2", // UPDATE THIS if needed
         input: {
           image: referenceImageUrl,
           prompt: prompt,
-          prompt_strength: 0.9, // 0.8 = More changes to person while keeping style (0.5=very similar, 0.9=very different)
+          strength: 0.9, // Control how much to change (0.0-1.0, higher = more change)
           num_inference_steps: 30,
-          guidance_scale: 10.0, // Higher = follows prompt more closely (7.5=balanced, 9-10=strict)
-          scheduler: "K_EULER",
-          num_outputs: 1
+          guidance_scale: 10.0,
+          num_outputs: 1,
+          output_format: "png"
         }
       })
+    });
     });
 
     if (!createResponse.ok) {
