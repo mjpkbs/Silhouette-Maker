@@ -54,25 +54,65 @@ function buildPrompt(withBackground) {
     let ageNumber = age.replace(/[^0-9]/g, '');
     if (!ageNumber) ageNumber = '30';
     
-    // Simplified prompt for img2img
-    let prompt = 'Professional studio portrait photograph from behind, ';
-    prompt += `${ageNumber} year old ${gender} person, ${ethnicity} ethnicity, `;
-    prompt += `wearing ${clothing}, `;
-    prompt += 'same exact camera angle and composition as reference, ';
-    prompt += 'same dramatic lighting with golden rim light, ';
+    // STRONG prompt for img2img - emphasize CHANGES
+    let prompt = '';
     
-    if (withBackground) {
-        prompt += 'keep the black background, ';
+    // 1. KEEP: Style and composition from reference
+    prompt += 'KEEP: same camera angle, same back view composition, same studio lighting setup with golden rim light, same dramatic lighting style. ';
+    
+    // 2. CHANGE: Person attributes (STRONG emphasis)
+    prompt += 'CHANGE THE PERSON: ';
+    prompt += `Transform into a completely different person - ${ageNumber} year old ${gender}, ${ethnicity} ethnicity. `;
+    
+    // Age-specific details
+    if (parseInt(ageNumber) < 20) {
+        prompt += 'Young person, youthful appearance, smooth skin, young hairstyle. ';
+    } else if (parseInt(ageNumber) < 40) {
+        prompt += 'Adult person, mature appearance, professional look. ';
+    } else if (parseInt(ageNumber) < 60) {
+        prompt += 'Middle-aged person, some grey hair possible, mature features. ';
     } else {
-        prompt += 'pure white background instead of black, ';
+        prompt += 'Elderly person, grey or white hair, aged features, wrinkles. ';
     }
     
-    prompt += 'upper body shot, cropped at waist, ';
-    prompt += 'photorealistic, high quality, professional photography, ';
-    prompt += 'cinematic lighting, editorial style, ';
-    prompt += 'no patterns, no graphics, no decorations, no text, ';
-    prompt += 'clean and simple, professional, ';
-    prompt += 'NOT side view, NOT face visible, exact back view only.';
+    // Gender-specific details
+    if (gender.includes('여성') || gender.toLowerCase().includes('female')) {
+        prompt += 'Female body shape, feminine shoulders, female hairstyle, female proportions. ';
+    } else {
+        prompt += 'Male body shape, masculine shoulders, male hairstyle, male proportions. ';
+    }
+    
+    // Ethnicity-specific details
+    if (ethnicity.includes('한국') || ethnicity.toLowerCase().includes('korean')) {
+        prompt += 'Korean person, East Asian features, Korean skin tone, typical Korean hair color and texture. ';
+    } else if (ethnicity.includes('일본') || ethnicity.toLowerCase().includes('japanese')) {
+        prompt += 'Japanese person, East Asian features, Japanese skin tone. ';
+    } else if (ethnicity.includes('중국') || ethnicity.toLowerCase().includes('chinese')) {
+        prompt += 'Chinese person, East Asian features, Chinese skin tone. ';
+    } else if (ethnicity.includes('서양') || ethnicity.includes('미국') || ethnicity.toLowerCase().includes('caucasian') || ethnicity.toLowerCase().includes('american')) {
+        prompt += 'Caucasian person, Western features, lighter skin tone, Western hair texture. ';
+    } else if (ethnicity.includes('흑인') || ethnicity.toLowerCase().includes('african') || ethnicity.toLowerCase().includes('black')) {
+        prompt += 'African person, dark skin tone, African features, curly or textured hair. ';
+    } else {
+        prompt += `${ethnicity} person with typical features of this ethnicity. `;
+    }
+    
+    // 3. CHANGE: Clothing
+    prompt += `CHANGE CLOTHING: wearing ${clothing}, different from reference image clothing. `;
+    
+    // 4. Background
+    if (withBackground) {
+        prompt += 'Same black background with golden rim lighting. ';
+    } else {
+        prompt += 'Change to pure white background. ';
+    }
+    
+    // 5. Maintain quality and framing
+    prompt += 'Upper body portrait, cropped at waist, professional photography, photorealistic, high detail, 8K quality. ';
+    
+    // 6. Strong negatives
+    prompt += 'NOT: same person as reference, NOT: identical to reference, NOT: same age as reference, NOT: same gender as reference, NOT: same clothing as reference. ';
+    prompt += 'NOT: side view, NOT: face visible, NOT: front view, back view only. ';
     
     return prompt;
 }
