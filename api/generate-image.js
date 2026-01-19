@@ -21,7 +21,7 @@ export default async function handler(req, res) {
     // 4. Extract FILE_ID from the link
     // 5. Use this format: https://drive.google.com/uc?export=view&id=FILE_ID
     
-    const referenceImageUrl = 'https://drive.google.com/uc?export=view&id=YOUR_FILE_ID';
+    const referenceImageUrl = 'https://drive.google.com/uc?export=view&id=1V9WajtkfRn5dsZTOWxiyqHSwPkOY_Jvh';
     
     // Example:
     // Link from Google Drive: https://drive.google.com/file/d/1a2B3c4D5e6F7g8H9i0J/view?usp=sharing
