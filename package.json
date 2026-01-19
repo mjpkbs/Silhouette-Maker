@@ -1,13 +1,12 @@
 {
   "name": "silhouette-generator",
-  "version": "1.0.0",
-  "description": "AI-powered silhouette image generator",
-  "main": "index.html",
+  "version": "2.0.0",
+  "description": "AI-powered silhouette image generator with img2img",
+  "type": "module",
   "scripts": {
-    "dev": "npx serve .",
-    "start": "npx serve ."
+    "dev": "vercel dev"
   },
-  "keywords": ["ai", "image-generation", "silhouette"],
-  "author": "",
+  "keywords": ["ai", "image-generation", "replicate", "img2img"],
+  "author": "KBS Graphics Team",
   "license": "MIT"
 }
